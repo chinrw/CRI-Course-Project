@@ -1,20 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <pthread.h>
-
-#define BUFFER_SIZE 64
+#include "helper.h"
 
 void *TCP_connection(void *arg);
 
@@ -104,8 +89,7 @@ void *TCP_connection(void *arg) {
 		}
 		else {
 			buffer[n] = '\0';
-
-			//TODO
+			handle_user(fd, buffer, n);
 		}
 	}
 	return NULL;
