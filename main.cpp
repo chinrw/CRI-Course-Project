@@ -3,13 +3,18 @@
 
 void *TCP_connection(void *arg);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 	printf("Started server\n");
 	fflush(stdout);
-	if (argc != 1) {
-		fprintf(stderr, "ERROR: wrong number of arguments\n");
+	if (argc != 1 && argc != 2) {
+		fprintf(stderr, "ERROR: wrong number of arguments[%d]\n", argc);
 		fflush(stdout);
 		return -1;
+	}
+	if (argc == 2) {
+		std::string tmp = argv[1];
+		serverdata.password = tmp.substr(tmp.find("--opt-pass=") + strlen("--opt-pass="));
+		printf("Server password is [%s]\n", serverdata.password.c_str());
 	}
 
 	/*establish structure*/
@@ -73,6 +78,7 @@ void *TCP_connection(void *arg) {
 	int *arg_ptr = (int *)arg;
 	int fd = (*arg_ptr);
 	char buffer[BUFFER_SIZE];
+	struct UserData* userdata = new UserData;
 
 	while (1) {
 		int n = recv(fd, buffer, BUFFER_SIZE - 1, 0);
@@ -89,7 +95,7 @@ void *TCP_connection(void *arg) {
 		}
 		else {
 			buffer[n] = '\0';
-			handle_user(fd, buffer, n);
+			handle_user(fd, buffer, n, userdata);
 		}
 	}
 	return NULL;
