@@ -2,5 +2,5 @@ all: main
 
 COMPILER = clang++
 
-main: main.c
-	$(COMPILER) main.c -Wall -pthread -std=c++11
+main: main.cpp
+	$(COMPILER) main.cpp -Wall -pthread -std=c++11
