@@ -8,7 +8,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
-#include <ctype.h>
+#include <cctype>
 #include <unistd.h>
 #include <dirent.h>
 #include <arpa/inet.h>
@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <pthread.h>
+#include <map>
 
 #define BUFFER_SIZE 64
 #define CHANNEL_NAME_LENGTH 20
@@ -25,12 +26,13 @@
 struct ChannelData {
     std::string name;
     std::vector<std::string> user;
+    std::map<std::string, struct UserData> user2;
 };
 
 struct ServerData {
     std::string password;
     std::vector<ChannelData> channels;
-} serverdata;
+} serverData;
 
 struct UserData {
     std::string username;
@@ -81,8 +83,8 @@ int findChannel(std::string str) {
         return -1;
     }
     str = str.substr(1);
-    for (unsigned int i = 0; i < serverdata.channels.size(); ++i) {
-        if (serverdata.channels[i].name == str) {
+    for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
+        if (serverData.channels[i].name == str) {
             return i;
         }
     }
