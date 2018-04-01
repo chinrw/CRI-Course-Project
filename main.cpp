@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 	/*establish structure*/
 
 	fd_set readfds;
-	while (1) {
+	while (true) {
 		FD_ZERO(&readfds);
 		FD_SET(tcp_socket, &readfds);
 		int n = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
@@ -105,7 +105,7 @@ void *TCP_connection(void *arg) {
 			return NULL;
 		}
 		else if (n == 0) {
-			printf("[Thread %u] Client disconnected\n", (unsigned int)pthread_self());
+			printf("[Thread %p] Client disconnected\n", pthread_self());
 			fflush(stdout);
 			close(fd);
 			return NULL;
