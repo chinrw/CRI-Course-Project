@@ -1,7 +1,23 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "helper.h"
+#include "handlers.h"
+
+/*
+Todo (questions):
+input USER without nickname? finished by prompt invalid
+input USER multiple times?
+JOIN how to follow input rule:#[a-zA-Z][_0-9a-zA-Z]*, validate by regular experssion?
+
+TODO (if have time):
+replace vector with hashmap
+
+Todo (cleanup after finish):
+initChannels()
+*/
+
 
 void *TCP_connection(void *arg);
+void initChannels();
 
 int main(int argc, char* argv[]) {
 	printf("Started server\n");
@@ -16,6 +32,7 @@ int main(int argc, char* argv[]) {
 		serverdata.password = tmp.substr(tmp.find("--opt-pass=") + strlen("--opt-pass="));
 		printf("Server password is [%s]\n", serverdata.password.c_str());
 	}
+	initChannels();
 
 	/*establish structure*/
 	int tcp_socket = socket(PF_INET, SOCK_STREAM, 0);
@@ -81,7 +98,7 @@ void *TCP_connection(void *arg) {
 	struct UserData* userdata = new UserData;
 
 	while (1) {
-		int n = recv(fd, buffer, BUFFER_SIZE - 1, 0);
+		int n = (int)recv(fd, buffer, BUFFER_SIZE - 1, 0);
 		if (n < 0) {
 			fprintf(stderr, "ERROR: recv() failed");
 			fflush(stdout);
@@ -99,4 +116,16 @@ void *TCP_connection(void *arg) {
 		}
 	}
 	return NULL;
+}
+
+void initChannels() {
+	struct ChannelData ch1;
+	struct ChannelData ch2;
+	struct ChannelData ch3;
+	ch1.name = "netprog";
+	ch2.name = "llvm";
+	ch3.name = "csci4220";
+	serverdata.channels.push_back(ch1);
+	serverdata.channels.push_back(ch2);
+	serverdata.channels.push_back(ch3);
 }
