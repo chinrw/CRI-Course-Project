@@ -75,6 +75,7 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
         return;
     }
     userdata->username = strList[1];
+    serverData.allUsers.insert(pair<string, struct UserData *>(userdata->username, userdata));
     std::string tmp = "Welcome, " + strList[1] + "\n";
     sendMsg(fd, tmp);
 }
@@ -126,6 +127,9 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
         //add user into existing channel
         serverData.channels[channelNum].user.push_back(userdata->username);
     }
+    ostringstream ss;
+    ss << "Joined channel " << strList[1] << endl;
+    sendMsg(fd, ss.str());
 }
 
 //finished

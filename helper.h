@@ -19,25 +19,76 @@
 #include <sys/select.h>
 #include <pthread.h>
 #include <map>
+#include <unordered_map>
 
 #define BUFFER_SIZE 64
 #define CHANNEL_NAME_LENGTH 20
 
+class SignalData {
+public:
+    SignalData() {
+        userName = "";
+        channelName = "";
+    }
+
+    SignalData(const std::string &userName, const std::string &channelName) :
+            userName(userName), channelName(channelName) {}
+
+    std::string userName;
+    std::string channelName;
+
+};
+
+
+template<class T>
+inline void hash_combine(std::size_t &s, const T &v) {
+    std::hash<T> h;
+    s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+}
+
+
 struct ChannelData {
     std::string name;
     std::vector<std::string> user;
-    std::map<std::string, struct UserData> user2;
 };
 
 struct ServerData {
     std::string password;
     std::vector<ChannelData> channels;
+    std::unordered_map<std::string, struct UserData *> allUsers;
 } serverData;
 
 struct UserData {
+    int fd;
     std::string username;
     bool isOperator = false;
+
+    bool operator==(const UserData &rhs) const {
+        return fd == rhs.fd &&
+               username == rhs.username &&
+               isOperator == rhs.isOperator;
+    }
+
+    bool operator!=(const UserData &rhs) const {
+        return !(rhs == *this);
+    }
+
 };
+
+template<class T>
+struct MyHash;
+
+template<>
+struct MyHash<UserData> {
+    std::size_t operator()(UserData const &s) const {
+        std::size_t res = 0;
+        hash_combine(res, s.fd);
+        hash_combine(res, s.username);
+        hash_combine(res, s.isOperator);
+        return res;
+    }
+};
+
 
 void sendMsg(int fd, std::string str);
 

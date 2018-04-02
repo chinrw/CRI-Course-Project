@@ -14,10 +14,11 @@ replace vector with hashmap
 
 Todo (cleanup after finish):
 initChannels()
+
+Todo use signal to kick user
 */
 
 using namespace std;
-
 
 void *TCP_connection(void *arg);
 
@@ -70,7 +71,8 @@ int main(int argc, char *argv[]) {
     while (true) {
         FD_ZERO(&readfds);
         FD_SET(tcp_socket, &readfds);
-        int n = select(FD_SETSIZE, &readfds, NULL, NULL, NULL);
+        int n = select(FD_SETSIZE, &readfds, nullptr, nullptr, nullptr);
+
         if (n < 0) {
             fprintf(stderr, "ERROR: select() failed\n");
             perror("select()");
@@ -95,13 +97,14 @@ int main(int argc, char *argv[]) {
 
 void *TCP_connection(void *arg) {
     pthread_detach(pthread_self());
-    int *arg_ptr = (int *) arg;
+    auto *arg_ptr = (int *) arg;
     int fd = (*arg_ptr);
     char buffer[BUFFER_SIZE];
-    struct UserData *userData = new UserData;
+    auto *userData = new UserData;
 
+    serverData.allUsers.insert(pair<string, struct UserData *>("test", userData));
     while (true) {
-        int n = (int) recv(fd, buffer, BUFFER_SIZE - 1, 0);
+        auto n = static_cast<int>(recv(fd, buffer, BUFFER_SIZE - 1, 0));
         if (n < 0) {
             fprintf(stderr, "ERROR: recv() failed");
             fflush(stdout);

@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(CRI_Course_Project)
 
-set(CMAKE_CXX_STANDARD 98)
-add_definitions(-std=c++98)
+add_definitions(-std=c++11 -Wall -pthread)
 
 include_directories(.)
 
