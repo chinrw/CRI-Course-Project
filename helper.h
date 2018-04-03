@@ -20,6 +20,8 @@
 #include <pthread.h>
 #include <map>
 #include <unordered_map>
+#include  <mutex>
+#include <algorithm>
 
 #define BUFFER_SIZE 64
 #define CHANNEL_NAME_LENGTH 20
