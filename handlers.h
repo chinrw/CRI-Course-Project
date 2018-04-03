@@ -2,9 +2,8 @@
 
 #include "helper.h"
 
-using namespace std;
 
-mutex mtx;
+std::mutex mtx;
 
 void handle_user(int fd, char *_response, int response_size, struct UserData *userdata);
 
@@ -75,9 +74,18 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
         return;
     }
     userdata->username = strList[1];
-    serverData.allUsers.insert(pair<string, struct UserData *>(userdata->username, userdata));
-    std::string tmp = "Welcome, " + strList[1] + "\n";
-    sendMsg(fd, tmp);
+    userdata->fd = fd;
+    auto it = serverData.allUsers.find(strList[1]);
+    if (it != serverData.allUsers.end()) {
+        serverData.allUsers[strList[1]] = userdata;
+        serverData.allUsers.erase(it);
+        std::string tmp = "Change username to " + strList[1] + "\n";
+        sendMsg(fd, tmp);
+    } else {
+        serverData.allUsers[strList[1]] = userdata;
+        std::string tmp = "Welcome, " + strList[1] + "\n";
+        sendMsg(fd, tmp);
+    }
 }
 
 //finished
@@ -123,13 +131,26 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
         ch.name = strList[1].substr(1);
         ch.user.push_back(userdata->username);
         serverData.channels.push_back(ch);
+        channelNum = findChannel(strList[1]);
     } else {
         //add user into existing channel
         serverData.channels[channelNum].user.push_back(userdata->username);
     }
-    ostringstream ss;
-    ss << "Joined channel " << strList[1] << endl;
+
+    std::ostringstream ss;
+    ss << "Joined channel " << strList[1] << std::endl;
     sendMsg(fd, ss.str());
+
+    for (const std::string &userSent : serverData.channels[channelNum].user) {
+        // sent join message to all users in the channel
+        auto it = serverData.allUsers.find(userSent);
+        if (it != serverData.allUsers.end() && it->second->username != userdata->username) {
+            std::ostringstream temp;
+            //#netprog> justin joined the channel.
+            temp << strList[1] << "> " << userdata->username << " joined the channel." << std::endl;
+            sendMsg(it->second->fd, temp.str());
+        }
+    }
 }
 
 //finished
@@ -201,18 +222,62 @@ void handle_user_KICK(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "You are not Operator\n");
         return;
     }
-    string kickUser = strList[2];
+    std::string kickUser = strList[2];
 
     int channelNum = findChannel(strList[1]);
     if (channelNum == -1) {
-        sendMsg(fd, "Invalid command\n");
+        sendMsg(fd, "Channel not found \n");
         return;
     }
-    serverData.channels[channelNum];
-
+    auto it = std::find(serverData.channels[channelNum].user.begin(),
+                        serverData.channels[channelNum].user.end(), kickUser);
+    if (it != serverData.channels[channelNum].user.end()) {
+        auto userIterator = serverData.allUsers.find(kickUser);
+        sendMsg(userIterator->second->fd, "You have been kicked \n");
+    } else {
+        sendMsg(fd, "KICK: User not found \n");
+    }
 }
 
 void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata) {
+    if (response.find(' ') == std::string::npos) {//in case "JOIN"
+        sendMsg(fd, "Invalid command\n");
+        return;
+    }
+    std::vector<std::string> strList = splitStr(response, ' ');
+
+    if (strList.size() < 3) {//in case "PRIVMSG "
+        sendMsg(fd, "Invalid command\n");
+        return;
+    }
+
+    if (strList[2].size() > 512) {
+        // too long message
+        sendMsg(fd, "Invalid command\n");
+        return;
+    }
+
+    if (strList[1][0] == '#') {
+        // send message to the whole channel
+        int channelNum = findChannel(strList[1]);
+        if (channelNum == -1) {
+            sendMsg(fd, "Channel not found \n");
+            return;
+        }
+        std::string message = strList[1] + "> " + userdata->username + ":" + strList[2] + "\n";
+        for (std::string userSent : serverData.channels[channelNum].user) {
+            sendMsg(serverData.allUsers[userSent]->fd, message);
+        }
+    } else {
+        // send message to one user
+        auto it = serverData.allUsers.find(strList[1]);
+        if (it != serverData.allUsers.end()) {
+            std::string message = userdata->username + "> " + strList[2] + "\n";
+            sendMsg(it->second->fd, message);
+        } else {
+            sendMsg(fd, "User not found \n");
+        }
+    }
 }
 
 //finished

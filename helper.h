@@ -55,8 +55,9 @@ struct ChannelData {
 struct ServerData {
     std::string password;
     std::vector<ChannelData> channels;
-    std::unordered_map<std::string, struct UserData *> allUsers;
-} serverData;
+    std::map<std::string, struct UserData *> allUsers;
+};
+struct ServerData serverData;
 
 struct UserData {
     int fd;
@@ -71,6 +72,30 @@ struct UserData {
 
     bool operator!=(const UserData &rhs) const {
         return !(rhs == *this);
+    }
+
+    bool operator<(const UserData &rhs) const {
+        if (fd < rhs.fd)
+            return true;
+        if (rhs.fd < fd)
+            return false;
+        if (username < rhs.username)
+            return true;
+        if (rhs.username < username)
+            return false;
+        return isOperator < rhs.isOperator;
+    }
+
+    bool operator>(const UserData &rhs) const {
+        return rhs < *this;
+    }
+
+    bool operator<=(const UserData &rhs) const {
+        return !(rhs < *this);
+    }
+
+    bool operator>=(const UserData &rhs) const {
+        return !(*this < rhs);
     }
 
 };

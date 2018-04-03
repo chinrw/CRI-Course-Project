@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+
 #include "helper.h"
 #include "handlers.h"
 
@@ -18,7 +19,6 @@ initChannels()
 Todo use signal to kick user
 */
 
-using namespace std;
 
 void *TCP_connection(void *arg);
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
             return -1;
         } else if (n == 0) { continue; }
         if (FD_ISSET(tcp_socket, &readfds)) {//incoming TCP connection
-            int new_socket = accept(tcp_socket, (struct sockaddr *) &tcp_client, (socklen_t *) &sizeOfSockaddr);
+            int new_socket = accept(tcp_socket, (struct sockaddr *) &tcp_client, &sizeOfSockaddr);
             printf("Rcvd incoming TCP connection from: [%s] on port[%d]\n",
                    inet_ntoa(tcp_client.sin_addr), tcp_client.sin_port);
             fflush(stdout);
@@ -102,7 +102,6 @@ void *TCP_connection(void *arg) {
     char buffer[BUFFER_SIZE];
     auto *userData = new UserData;
 
-    serverData.allUsers.insert(pair<string, struct UserData *>("test", userData));
     while (true) {
         auto n = static_cast<int>(recv(fd, buffer, BUFFER_SIZE - 1, 0));
         if (n < 0) {
