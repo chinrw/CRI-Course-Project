@@ -126,6 +126,9 @@ std::vector<std::string> splitStr(std::string &s, char delim);
 
 int findChannel(std::string str);
 
+void channelBoardCast(std::string channelName, std::string message, struct UserData *userdata);
+
+
 void sendMsg(int fd, std::string str) {
     if (send(fd, str.c_str(), str.length(), 0) < 0) {
         fprintf(stderr, "Send Failed\n");
@@ -165,4 +168,19 @@ int findChannel(std::string str) {
         }
     }
     return -1;
+}
+
+void channelBoardCast(std::string channelName, std::string message, struct UserData *userdata) {
+    int channelNum = findChannel(channelName);
+    if (channelNum == -1) {
+        sendMsg(userdata->fd, "Channel not found \n");
+        return;
+    }
+    for (auto userSent : serverData.channels[channelNum].user) {
+        // sent join message to all users in the channel
+        auto it = serverData.allUsers.find(userSent);
+        std::ostringstream temp;
+        //#netprog> justin joined the channel.
+        sendMsg(it->second->fd, message);
+    }
 }

@@ -107,8 +107,8 @@ void handle_user_LIST(int fd, std::string response, struct UserData *userdata) {
         }
     }
 
-    for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
-        tmp += "* " + serverData.channels[i].name + "\n";
+    for (auto &channel : serverData.channels) {
+        tmp += "* " + channel.name + "\n";
     }
     sendMsg(fd, tmp);
 }
@@ -231,9 +231,14 @@ void handle_user_KICK(int fd, std::string response, struct UserData *userdata) {
     }
     auto it = std::find(serverData.channels[channelNum].user.begin(),
                         serverData.channels[channelNum].user.end(), kickUser);
+
     if (it != serverData.channels[channelNum].user.end()) {
-        auto userIterator = serverData.allUsers.find(kickUser);
-        sendMsg(userIterator->second->fd, "You have been kicked \n");
+        std::ostringstream temp;
+        temp << strList[1] << "> " << kickUser << " has been kicked from the channel." << std::endl;
+        channelBoardCast(strList[1], temp.str(), userdata);
+        mtx.lock();
+        serverData.channels[channelNum].user.erase(it);
+        mtx.unlock();
     } else {
         sendMsg(fd, "KICK: User not found \n");
     }
@@ -265,7 +270,7 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
             return;
         }
         std::string message = strList[1] + "> " + userdata->username + ":" + strList[2] + "\n";
-        for (std::string userSent : serverData.channels[channelNum].user) {
+        for (auto &userSent : serverData.channels[channelNum].user) {
             sendMsg(serverData.allUsers[userSent]->fd, message);
         }
     } else {
@@ -283,14 +288,15 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
 //finished
 void handle_user_QUIT(int fd, std::string response, struct UserData *userdata) {
     //remove from all channels
-    for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
-        for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
-            if (serverData.channels[i].user[j] == userdata->username) {
-                serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
+    for (auto &channel : serverData.channels) {
+        for (unsigned int j = 0; j < channel.user.size(); ++j) {
+            if (channel.user[j] == userdata->username) {
+                channel.user.erase(channel.user.begin() + j);
                 break;
             }
         }
     }
+    delete (userdata);
     close(fd);
 }
 
