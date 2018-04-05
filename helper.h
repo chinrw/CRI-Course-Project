@@ -25,6 +25,8 @@
 
 #define BUFFER_SIZE 64
 #define CHANNEL_NAME_LENGTH 20
+#define MAX_CONNECTION_QUEUE 5
+#define IPv6_ADDRESS_LENGTH 128
 
 class SignalData {
 public:
