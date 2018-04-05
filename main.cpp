@@ -6,17 +6,15 @@
 
 /*
 Todo (questions):
-input USER without nickname? finished by prompt invalid
-input USER multiple times?
 JOIN how to follow input rule:#[a-zA-Z][_0-9a-zA-Z]*, validate by regular experssion?
 
 TODO (if have time):
+IPv6
 replace vector with hashmap
 
 Todo (cleanup after finish):
 initChannels()
 
-Todo use signal to kick user
 */
 
 

@@ -62,14 +62,13 @@ void handle_user(int fd, char *_response, int response_size, struct UserData *us
 
 }
 
-//finished
 void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
     if (response.find(' ') == std::string::npos) {//in case "USER"
         sendMsg(fd, "Invalid command\n");
         return;
     }
     std::vector<std::string> strList = splitStr(response, ' ');
-    if (strList.size() < 2) {//in case "USER "
+    if (strList.size() != 2) {//in case "USER "
         sendMsg(fd, "Invalid command\n");
         return;
     }
@@ -88,7 +87,6 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
     }
 }
 
-//finished
 void handle_user_LIST(int fd, std::string response, struct UserData *userdata) {
     std::string tmp = "";
     if (response.find(' ') != std::string::npos) {//in case "list"
@@ -113,14 +111,13 @@ void handle_user_LIST(int fd, std::string response, struct UserData *userdata) {
     sendMsg(fd, tmp);
 }
 
-//finished
 void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
     if (response.find(' ') == std::string::npos) {//in case "JOIN"
         sendMsg(fd, "Invalid command\n");
         return;
     }
     std::vector<std::string> strList = splitStr(response, ' ');
-    if (strList.size() < 2) {//in case "JOIN "
+    if (strList.size() != 2) {//in case "JOIN "
         sendMsg(fd, "Invalid command\n");
         return;
     }
@@ -153,23 +150,23 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
     }
 }
 
-//finished
 void handle_user_PART(int fd, std::string response, struct UserData *userdata) {
-    if (response.find(' ') == std::string::npos) {//in case "PART"
-        sendMsg(fd, "Invalid command\n");
+    if (response.find(' ') == std::string::npos) {//in case "PART", remove from all channelS
+		for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
+			for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
+				if (serverData.channels[i].user[j] == userdata->username) {
+					serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
+					break;
+				}
+			}
+		}
         return;
     }
     std::vector<std::string> strList = splitStr(response, ' ');
-    if (strList.size() == 1) { // remove from all channel
-        for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
-            for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
-                if (serverData.channels[i].user[j] == userdata->username) {
-                    serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
-                    break;
-                }
-            }
-        }
-    } else {
+	if (strList.size() > 2) {
+		sendMsg(fd, "Invalid command\n");
+	}
+	else {
         int channelNum = findChannel(strList[1]);
         if (channelNum == -1) {
             sendMsg(fd, "Invalid command\n");
@@ -185,17 +182,15 @@ void handle_user_PART(int fd, std::string response, struct UserData *userdata) {
             mtx.unlock();
         }
     }
-
 }
 
-//finished
 void handle_user_OPERATOR(int fd, std::string response, struct UserData *userdata) {
     if (response.find(' ') == std::string::npos) {//in case "OPERATOR"
         sendMsg(fd, "Invalid command\n");
         return;
     }
     std::vector<std::string> strList = splitStr(response, ' ');
-    if (strList.size() < 2) {//in case "OPERATOR "
+    if (strList.size() != 2) {//in case "OPERATOR ","OPERATOR  pwd"
         sendMsg(fd, "Invalid command\n");
         return;
     }
@@ -285,7 +280,6 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
     }
 }
 
-//finished
 void handle_user_QUIT(int fd, std::string response, struct UserData *userdata) {
     //remove from all channels
     for (auto &channel : serverData.channels) {
@@ -300,7 +294,6 @@ void handle_user_QUIT(int fd, std::string response, struct UserData *userdata) {
     close(fd);
 }
 
-//finished
 void handle_user_OTHER(int fd, std::string response, struct UserData *userdata) {
     sendMsg(fd, "Invalid command\n");
 }
