@@ -152,21 +152,20 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
 
 void handle_user_PART(int fd, std::string response, struct UserData *userdata) {
     if (response.find(' ') == std::string::npos) {//in case "PART", remove from all channelS
-		for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
-			for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
-				if (serverData.channels[i].user[j] == userdata->username) {
-					serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
-					break;
-				}
-			}
-		}
+        for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
+            for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
+                if (serverData.channels[i].user[j] == userdata->username) {
+                    serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
+                    break;
+                }
+            }
+        }
         return;
     }
     std::vector<std::string> strList = splitStr(response, ' ');
-	if (strList.size() > 2) {
-		sendMsg(fd, "Invalid command\n");
-	}
-	else {
+    if (strList.size() > 2) {
+        sendMsg(fd, "Invalid command\n");
+    } else {
         int channelNum = findChannel(strList[1]);
         if (channelNum == -1) {
             sendMsg(fd, "Invalid command\n");
@@ -251,9 +250,15 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
         return;
     }
 
-    if (strList[2].size() > 512) {
+    std::string all_info;
+
+    for (auto i = 2; i < strList.size(); ++i) {
+        all_info += strList[i] + " ";
+    }
+
+    if (all_info.size() > 512) {
         // too long message
-        sendMsg(fd, "Invalid command\n");
+        sendMsg(fd, "Invalid command Message Too Long\n");
         return;
     }
 
@@ -264,7 +269,7 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
             sendMsg(fd, "Channel not found \n");
             return;
         }
-        std::string message = strList[1] + "> " + userdata->username + ":" + strList[2] + "\n";
+        std::string message = strList[1] + "> " + userdata->username + ": " + all_info + "\n";
         for (auto &userSent : serverData.channels[channelNum].user) {
             sendMsg(serverData.allUsers[userSent]->fd, message);
         }
@@ -272,7 +277,7 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
         // send message to one user
         auto it = serverData.allUsers.find(strList[1]);
         if (it != serverData.allUsers.end()) {
-            std::string message = userdata->username + "> " + strList[2] + "\n";
+            std::string message = userdata->username + "> " + all_info + "\n";
             sendMsg(it->second->fd, message);
         } else {
             sendMsg(fd, "User not found \n");
