@@ -190,7 +190,7 @@ void channelBoardCast(std::string channelName, std::string message, struct UserD
     }
 }
 
-bool validateChannelName(std::string str) {
+bool validateName(std::string str) {
 	std::smatch m;
 	std::regex e("^#[a-zA-Z][_0-9a-zA-Z]*$");
 	return std::regex_search(str, m, e);
