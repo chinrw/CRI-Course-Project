@@ -20,8 +20,9 @@
 #include <pthread.h>
 #include <map>
 #include <unordered_map>
-#include  <mutex>
+#include <mutex>
 #include <algorithm>
+#include <regex>
 
 #define BUFFER_SIZE 64
 #define CHANNEL_NAME_LENGTH 20
@@ -187,4 +188,10 @@ void channelBoardCast(std::string channelName, std::string message, struct UserD
         //#netprog> justin joined the channel.
         sendMsg(it->second->fd, message);
     }
+}
+
+bool validateChannelName(std::string str) {
+	std::smatch m;
+	std::regex e("^#[a-zA-Z][_0-9a-zA-Z]*$");
+	return std::regex_search(str, m, e);
 }

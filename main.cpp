@@ -1,21 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-
 #include "helper.h"
 #include "handlers.h"
 
 /*
 Todo (questions):
-JOIN how to follow input rule:#[a-zA-Z][_0-9a-zA-Z]*, validate by regular experssion?
 
 TODO (if have time):
 replace vector with hashmap
 
 Todo (cleanup after finish):
 initChannels()
-
 */
-
 
 void *TCP_connection(void *arg);
 

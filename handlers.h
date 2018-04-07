@@ -121,8 +121,12 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "Invalid command\n");
         return;
     }
+    if (!validateChannelName(strList[1])) {
+		sendMsg(fd, "Invalid channel name\n");
+		return;
+	}
     int channelNum = findChannel(strList[1]);
-    if (strList[1][0] == '#' && channelNum == -1) {
+    if (channelNum == -1) {
         //add new channel and add user into channel
         struct ChannelData ch;
         ch.name = strList[1].substr(1);
