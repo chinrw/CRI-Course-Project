@@ -2,4 +2,14 @@
 
 This is a simple Chat server made by C++.
 
-Will Add IPV6 support in the furture.
+Already Add IPV6 support
+
+## GUIDE
+
+##### IPV4
+
+nc localhost (port on terminal)
+
+##### IPV6
+
+nc ::1 (port on terminal)
