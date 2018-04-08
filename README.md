@@ -6,6 +6,11 @@ Already Add IPV6 support
 
 ## GUIDE
 
+##### Compile and Run
+
+make
+./hw5
+
 ##### IPV4
 
 nc localhost (port on terminal)
