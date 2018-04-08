@@ -72,7 +72,7 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "Invalid command\n");
         return;
     }
-    if (!validateName(strList[1])) {
+    if (!validateUserName(strList[1])) {
         sendMsg(fd, "Invalid Username\n");
         return;
     }
@@ -98,17 +98,21 @@ void handle_user_LIST(int fd, std::string response, struct UserData *userdata) {
         if (strList.size() > 1) {//in case "list "
             int channelNum = findChannel(strList[1]);
             if (channelNum >= 0) {//in case "list invalid"
+				//print users in the channel
+				tmp += "There are currently " + std::to_string(serverData.channels[channelNum].user.size()) + " members.\n";
+				tmp +=  serverData.channels[channelNum].name + " members:";
                 for (unsigned int i = 0; i < serverData.channels[channelNum].user.size(); ++i) {
-                    tmp += serverData.channels[channelNum].user[i] + "\n";
+                    tmp += " " + serverData.channels[channelNum].user[i];
                 }
+				tmp += "\n";
                 sendMsg(fd, tmp);
                 return;
             }
-            sendMsg(fd, "Invalid channel\n");
-            return;
         }
     }
 
+	//print all channel names
+	tmp += "There are currently " + std::to_string(serverData.channels.size()) + " channels.\n";
     for (auto &channel : serverData.channels) {
         tmp += "* " + channel.name + "\n";
     }
@@ -125,7 +129,7 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "Invalid command\n");
         return;
     }
-    if (!validateName(strList[1])) {
+    if (!validateChannelName(strList[1])) {
         sendMsg(fd, "Invalid channel name\n");
         return;
     }
