@@ -4,13 +4,7 @@
 #include "handlers.h"
 
 /*
-Todo (questions):
-
-TODO (if have time):
-replace vector with hashmap
-
-Todo (cleanup after finish):
-initChannels()
+Todo (questions) JOIN new created channel problem
 */
 
 void *TCP_connection(void *arg);
@@ -108,7 +102,7 @@ void *TCP_connection(void *arg) {
             fflush(stdout);
             return nullptr;
         } else if (n == 0) {
-            printf("[Thread %lu] Client disconnected\n", pthread_self());
+            printf("[Thread %p] Client disconnected\n", pthread_self());
             fflush(stdout);
             close(fd);
             return nullptr;

@@ -131,7 +131,7 @@ std::vector<std::string> splitStr(std::string &s, char delim);
 
 int findChannel(std::string str);
 
-void channelBoardCast(std::string channelName, std::string message, struct UserData *userdata);
+void channelBoardCast(std::string channelName, const std::string &message, struct UserData *userData);
 
 
 void sendMsg(int fd, std::string str) {
@@ -175,13 +175,13 @@ int findChannel(std::string str) {
     return -1;
 }
 
-void channelBoardCast(std::string channelName, std::string message, struct UserData *userdata) {
+void channelBoardCast(std::string channelName, const std::string &message, struct UserData *userData) {
     int channelNum = findChannel(channelName);
     if (channelNum == -1) {
-        sendMsg(userdata->fd, "Channel not found \n");
+        sendMsg(userData->fd, "Channel not found \n");
         return;
     }
-    for (auto userSent : serverData.channels[channelNum].user) {
+    for (const auto &userSent : serverData.channels[channelNum].user) {
         // sent join message to all users in the channel
         auto it = serverData.allUsers.find(userSent);
         std::ostringstream temp;
@@ -190,8 +190,14 @@ void channelBoardCast(std::string channelName, std::string message, struct UserD
     }
 }
 
-bool validateName(std::string str) {
-	std::smatch m;
-	std::regex e("^#[a-zA-Z][_0-9a-zA-Z]*$");
-	return std::regex_search(str, m, e);
+bool validateChannelName(const std::string &str) {
+    std::smatch m;
+    std::regex e("#[a-zA-Z][_0-9a-zA-Z]*$");
+    return std::regex_match(str, m, e);
+}
+
+bool validateUserName(const std::string &str) {
+    std::smatch m;
+    std::regex e("[a-zA-Z][_0-9a-zA-Z]*");
+    return std::regex_match(str, m, e);
 }

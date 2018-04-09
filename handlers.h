@@ -72,7 +72,7 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "Invalid command\n");
         return;
     }
-    if (!validateName(strList[1])) {
+    if (!validateUserName(strList[1])) {
         sendMsg(fd, "Invalid Username\n");
         return;
     }
@@ -80,10 +80,18 @@ void handle_user_USER(int fd, std::string response, struct UserData *userdata) {
     userdata->fd = fd;
     auto it = serverData.allUsers.find(strList[1]);
     if (it != serverData.allUsers.end()) {
-        serverData.allUsers[strList[1]] = userdata;
-        serverData.allUsers.erase(it);
-        std::string tmp = "Change username to " + strList[1] + "\n";
-        sendMsg(fd, tmp);
+        if (it->second->fd == userdata->fd) {
+            mtx.lock();
+            serverData.allUsers[strList[1]] = userdata;
+            serverData.allUsers.erase(it);
+            mtx.unlock();
+            std::string tmp = "Change username to " + strList[1] + "\n";
+            sendMsg(fd, tmp);
+        } else {
+            std::string tmp = "Already a user called " + strList[1] + "\n";
+            sendMsg(fd, tmp);
+            return;
+        }
     } else {
         serverData.allUsers[strList[1]] = userdata;
         std::string tmp = "Welcome, " + strList[1] + "\n";
@@ -125,7 +133,7 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
         sendMsg(fd, "Invalid command\n");
         return;
     }
-    if (!validateName(strList[1])) {
+    if (!validateChannelName(strList[1])) {
         sendMsg(fd, "Invalid channel name\n");
         return;
     }
@@ -159,26 +167,40 @@ void handle_user_JOIN(int fd, std::string response, struct UserData *userdata) {
 }
 
 void handle_user_PART(int fd, std::string response, struct UserData *userdata) {
+    std::vector<std::string> strList = splitStr(response, ' ');
+
     if (response.find(' ') == std::string::npos) {//in case "PART", remove from all channelS
-        for (unsigned int i = 0; i < serverData.channels.size(); ++i) {
-            for (unsigned int j = 0; j < serverData.channels[i].user.size(); ++j) {
-                if (serverData.channels[i].user[j] == userdata->username) {
-                    serverData.channels[i].user.erase(serverData.channels[i].user.begin() + j);
-                    break;
-                }
+        for (auto &channel : serverData.channels) {
+            auto it = std::find(channel.user.begin(),
+                                channel.user.end(), userdata->username);
+            if (it != channel.user.end()) {
+                std::string temp = strList[0] + " #" + channel.name;
+                handle_user_PART(fd, temp, userdata);
             }
         }
         return;
     }
-    std::vector<std::string> strList = splitStr(response, ' ');
     if (strList.size() > 2) {
         sendMsg(fd, "Invalid command\n");
     } else {
         int channelNum = findChannel(strList[1]);
         if (channelNum == -1) {
-            sendMsg(fd, "Invalid command\n");
+            sendMsg(fd, "You are not currently in " + strList[1] + "\n");
             return;
         } else {
+            auto it = std::find(serverData.channels[channelNum].user.begin(),
+                                serverData.channels[channelNum].user.end(), userdata->username);
+
+            if (it == serverData.channels[channelNum].user.end()) {
+                sendMsg(fd, "You are not currently in " + strList[1] + "\n");
+                return;
+            }
+
+            for (auto &user: serverData.channels[channelNum].user) {
+                std::string message = strList[1] + "> " + userdata->username + " left the channel.\n";
+                sendMsg(serverData.allUsers[user]->fd, message);
+            }
+
             mtx.lock();
             for (unsigned int j = 0; j < serverData.channels[channelNum].user.size(); ++j) {
                 if (serverData.channels[channelNum].user[j] == userdata->username) {
@@ -295,6 +317,7 @@ void handle_user_PRIVMSG(int fd, std::string response, struct UserData *userdata
 
 void handle_user_QUIT(int fd, std::string response, struct UserData *userdata) {
     //remove from all channels
+    mtx.lock();
     for (auto &channel : serverData.channels) {
         for (unsigned int j = 0; j < channel.user.size(); ++j) {
             if (channel.user[j] == userdata->username) {
@@ -303,6 +326,7 @@ void handle_user_QUIT(int fd, std::string response, struct UserData *userdata) {
             }
         }
     }
+    mtx.unlock();
     delete (userdata);
     close(fd);
 }
