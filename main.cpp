@@ -102,7 +102,7 @@ void *TCP_connection(void *arg) {
             fflush(stdout);
             return nullptr;
         } else if (n == 0) {
-            printf("[Thread %p] Client disconnected\n", pthread_self());
+            printf("[Thread %lu] Client disconnected\n", pthread_self());
             fflush(stdout);
             close(fd);
             return nullptr;
